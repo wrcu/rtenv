@@ -326,9 +326,11 @@ void serial_readwrite_task()
 	fdin = open("/dev/tty0/in", 0);
 
 	/* Prepare the response message to be queued. */
-	memcpy(str, "Got:", 4);
+	//memcpy(str, "Got:", 4);
+       
 
 	while (1) {
+              puts("->");
 		curr_char = 4;
 		done = 0;
 		do {
@@ -340,21 +342,124 @@ void serial_readwrite_task()
 			 * finish the string and inidcate we are done.
 			 */
 			if (curr_char >= 98 || (ch == '\r') || (ch == '\n')) {
-				str[curr_char] = '\n';
-				str[curr_char+1] = '\0';
+				//str[curr_char] = '\n';
+				//str[curr_char+1] = '\0';
 				done = -1;
+                            puts("\r\n");
+                                
 				/* Otherwise, add the character to the
 				 * response string. */
 			}
 			else {
-				str[curr_char++] = ch;
+				//str[curr_char++] = ch;
+                                write(fdout,&ch,1);
 			}
 		} while (!done);
 
 		/* Once we are done building the response string, queue the
 		 * response to be sent to the RS232 port.
 		 */
-		write(fdout, str, curr_char+1+1);
+		//write(fdout, str, curr_char+1+1);
+	}
+}
+
+void my_echo()
+{
+
+}
+
+void ps()
+{
+
+}
+
+void hello()
+{
+   puts("Hello!\r\n");
+   puts("There are functions of my shell:\r\n");
+   puts("hello             :introduce\r\n");
+   puts("^                 :previous command\r\n");
+   puts("backspace         :delete a char\r\n");
+   puts("\r\n");    
+}
+
+void my_shell()
+{
+       int fdout, fdin;
+	char str[100]  ;
+	char ch;
+	int curr_char;
+	int done;  
+       char input_string[100][50];  //儲存字串 ,可存100個字串 ,
+       int s=0;
+       int y=0;
+	fdout = mq_open("/tmp/mqueue/out", 0);
+	fdin = open("/dev/tty0/in", 0);
+       int h=0;
+       int i=0;;
+       int length1 , length2; 
+       int d;
+       int f=0;
+       int flag;
+	while (1) {
+              puts("->");
+		curr_char = 0;
+		done = 0;
+		do {
+			read(fdin, &ch, 1);			  
+                     switch(ch)
+                        {                 
+                        case '\r':
+                        case '\n':
+				done = -1;
+                            puts("\r\n");
+                            input_string[s][y]='\0';                                                               
+                            if( !(strcmp("hello" ,input_string[s])) )                        
+                                 hello();
+                                
+                            else if ( !(strcmp("echo" ,input_string[s])) )
+                                 my_echo();
+                                 
+                            else if ( !(strcmp("ps" ,input_string[s])) )
+                                 ps();                             
+                            s++;
+                            h=s;
+                            y=0;
+                            break;			
+                    
+          
+                        case '^':                  //若輸入指令^ 則印出上一個指令
+                            if(h>0){                    //若有前一個指令,才印
+                              puts("\r");
+                              puts("->");   
+                              length1=strlen(input_string[h]);
+                              h--; 
+                              length2=strlen(input_string[h]);
+                              puts(input_string[h]);                                   
+                              d=length1-length2;
+                               
+                              if(d>0) {
+                                 for(i=d;i>0;i--)
+                                    puts(" ");
+                                 for(i=d;i>0;i--)
+                                    puts("\b");                       
+                                   }                         
+                                 }   
+                             break;
+      
+                          case 127:
+                            if(y>0){
+                               puts("\b \b");                        
+                               y--;
+                                 }
+                             break;
+
+		            default:
+                              write(fdout,&ch,1);
+                              input_string[s][y]=ch;
+                              y++;
+			}
+		} while (!done);		
 	}
 }
 
@@ -366,10 +471,10 @@ void first()
 	if (!fork()) setpriority(0, 0), serialout(USART2, USART2_IRQn);
 	if (!fork()) setpriority(0, 0), serialin(USART2, USART2_IRQn);
 	if (!fork()) rs232_xmit_msg_task();
-	if (!fork()) setpriority(0, PRIORITY_DEFAULT - 10), queue_str_task1();
-	if (!fork()) setpriority(0, PRIORITY_DEFAULT - 10), queue_str_task2();
-	if (!fork()) setpriority(0, PRIORITY_DEFAULT - 10), serial_readwrite_task();
-
+	//if (!fork()) setpriority(0, PRIORITY_DEFAULT - 10), queue_str_task1();
+	//if (!fork()) setpriority(0, PRIORITY_DEFAULT - 10), queue_str_task2();
+	//if (!fork()) setpriority(0, PRIORITY_DEFAULT - 10), serial_readwrite_task();
+        if (!fork()) setpriority(0, PRIORITY_DEFAULT - 10), my_shell();
 	setpriority(0, PRIORITY_LIMIT);
 
 	while(1);
