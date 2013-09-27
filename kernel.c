@@ -362,6 +362,18 @@ void serial_readwrite_task()
 		//write(fdout, str, curr_char+1+1);
 	}
 }
+char input_string[100][50];  //儲存字串 ,可存100個字串 ,
+
+void history(int s)
+{
+   int i;
+  for(i=0;i<=s;i++){
+     puts(input_string[i]);
+     puts("\r\n");
+   }
+
+
+}
 
 void my_echo()
 {
@@ -380,6 +392,7 @@ void hello()
    puts("hello             :introduce\r\n");
    puts("^                 :previous command\r\n");
    puts("backspace         :delete a char\r\n");
+   puts("history           :print commands\r\n");
    puts("\r\n");    
 }
 
@@ -390,7 +403,7 @@ void my_shell()
 	char ch;
 	int curr_char;
 	int done;  
-       char input_string[100][50];  //儲存字串 ,可存100個字串 ,
+       //char input_string[100][50];  //儲存字串 ,可存100個字串 ,
        int s=0;
        int y=0;
 	fdout = mq_open("/tmp/mqueue/out", 0);
@@ -421,7 +434,9 @@ void my_shell()
                                  my_echo();
                                  
                             else if ( !(strcmp("ps" ,input_string[s])) )
-                                 ps();                             
+                                 ps();
+                            else if( !(strcmp("history" ,input_string[s])) )
+                                 history(s);                            
                             s++;
                             h=s;
                             y=0;
